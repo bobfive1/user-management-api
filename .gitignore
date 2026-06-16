@@ -1,0 +1,28 @@
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Go build outputs
+bin/
+build/
+dist/
+tmp/
+*.exe
+*.test
+*.out
+
+# Go coverage and profiling
+coverage/
+coverage.*
+*.coverprofile
+*.prof
+
+# Logs
+*.log
+
+# Local editor and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
