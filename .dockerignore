@@ -1,0 +1,12 @@
+.git
+.agents
+.codex
+
+bin/
+dist/
+tmp/
+coverage.out
+*.test
+
+Dockerfile
+.dockerignore
