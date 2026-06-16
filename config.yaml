@@ -1,0 +1,23 @@
+app:
+  name: "customer-crud-api"
+
+serverApi:
+  port: "8080"
+  readTimeout: 10s
+  writeTimeout: 10s
+  idleTimeout: 20s
+  shutdownTimeout: 15s
+
+logging:
+  level: "info"
+
+posgresql:
+  host: localhost
+  port: 5432
+  username: sa
+  password: psdsystem
+  database: appdb
+  sslmode: disable
+  max-conns: 10
+  min-conns: 1
+  connect-timeout: 10s

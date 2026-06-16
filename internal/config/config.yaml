@@ -1,0 +1,29 @@
+app:
+  name: github.com/bobfive1/user-management-api
+
+cronjob:
+  format: "5 0 * * *" # every 5 minutes #0 0 * * * every 00:00 o'clock
+
+apiServer:
+  name: "APIServer"
+  address: 0.0.0.0:8082
+  readTimeout: 20s
+  writeTimeout: 20s
+  idleTimeout: 20s
+  readbuffersize: 409600
+  bodylimitsize: 10 #MB
+
+logging:
+  level: info
+  disable-stacktrace : true
+
+posgresql:
+  host: localhost
+  port: 5432
+  username: sa
+  password: psdsystem
+  database: appdb
+  sslmode: disable
+  max-conns: 10
+  min-conns: 1
+  connect-timeout: 10s 
