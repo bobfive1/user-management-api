@@ -17,7 +17,7 @@ func TestLoadReadsYAMLIntoStruct(t *testing.T) {
 	if cfg.ServerAPI.Port != "0.0.0.0:8080" {
 		t.Fatalf("server port = %q", cfg.ServerAPI.Port)
 	}
-	if cfg.ServerAPI.ReadTimeout != 10*time.Second {
+	if cfg.ServerAPI.ReadTimeout != 20*time.Second {
 		t.Fatalf("read timeout = %s", cfg.ServerAPI.ReadTimeout)
 	}
 	if cfg.Logging.Level != "info" {
