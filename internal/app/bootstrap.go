@@ -81,6 +81,8 @@ func ApiServer(config *config.AppConfig, service userprofile.UserProfileService)
 	router.Use(middleware.TraceIDMiddleware())
 	router.Use(errorInt.MiddlewareErrorHandler())
 
+	registerSwaggerRoutes(router)
+
 	handler := userprofile.NewUserProfileHandler(service)
 	handler.RegisterRoutes(router.Group("/api/v1"))
 

@@ -1,0 +1,602 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "user-management-api",
+    "version": "1.0.0",
+    "description": "User profile management API."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Local development"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health"
+    },
+    {
+      "name": "User Profiles"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Health check",
+        "responses": {
+          "200": {
+            "description": "API is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                },
+                "example": {
+                  "status": "UP",
+                  "timestamp": "2026-06-16T14:00:00Z",
+                  "uptime": "10s"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/userprofiles": {
+      "post": {
+        "tags": [
+          "User Profiles"
+        ],
+        "summary": "Create user profile",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InsertUserProfileRequest"
+              },
+              "example": {
+                "user_id": "bob01",
+                "password": "secret123",
+                "first_name": "Bob",
+                "last_name": "Five",
+                "address": "Bangkok",
+                "birthdate": "1995-01-15",
+                "email": "bob@example.com"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User profile created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/APIResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/UserProfile"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "User Profiles"
+        ],
+        "summary": "List user profiles",
+        "responses": {
+          "200": {
+            "description": "User profile list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/APIResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/UserProfile"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/userprofiles/{user_id}": {
+      "get": {
+        "tags": [
+          "User Profiles"
+        ],
+        "summary": "Get user profile by ID",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/UserIDPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/APIResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/UserProfile"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "User Profiles"
+        ],
+        "summary": "Update user profile",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/UserIDPath"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserProfileRequest"
+              },
+              "example": {
+                "password": "new-secret123",
+                "first_name": "Bob",
+                "last_name": "Five",
+                "address": "Chiang Mai",
+                "birthdate": "1995-01-15",
+                "email": "bob.five@example.com"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User profile updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/APIResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/UserProfile"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "User Profiles"
+        ],
+        "summary": "Delete user profile",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/UserIDPath"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User profile deleted"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/userprofiles/login": {
+      "post": {
+        "tags": [
+          "User Profiles"
+        ],
+        "summary": "Login with user ID and password",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserProfileLoginRequest"
+              },
+              "example": {
+                "user_id": "bob01",
+                "password": "secret123"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/APIResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/UserProfile"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "UserIDPath": {
+        "name": "user_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "example": "bob01"
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Invalid request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "timestamp": "2026-06-16T14:00:00Z",
+              "error_code": "400",
+              "error_message": "Field validation Error",
+              "error_detail": {
+                "email": "[email] Email invalid format"
+              }
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "User profile not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "timestamp": "2026-06-16T14:00:00Z",
+              "error_code": "404",
+              "error_message": "The requested user profile does not exist."
+            }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "Internal server error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "timestamp": "2026-06-16T14:00:00Z",
+              "error_code": "500",
+              "error_message": "Internal server error",
+              "error_detail": "database connection failed"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "UP"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "uptime": {
+            "type": "string",
+            "example": "10s"
+          }
+        }
+      },
+      "InsertUserProfileRequest": {
+        "type": "object",
+        "required": [
+          "user_id",
+          "password",
+          "first_name",
+          "last_name"
+        ],
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "maxLength": 20,
+            "example": "bob01"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "maxLength": 20,
+            "example": "secret123"
+          },
+          "first_name": {
+            "type": "string",
+            "maxLength": 150,
+            "example": "Bob"
+          },
+          "last_name": {
+            "type": "string",
+            "maxLength": 150,
+            "example": "Five"
+          },
+          "address": {
+            "type": "string",
+            "nullable": true,
+            "example": "Bangkok"
+          },
+          "birthdate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "example": "1995-01-15"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 255,
+            "nullable": true,
+            "example": "bob@example.com"
+          }
+        }
+      },
+      "UpdateUserProfileRequest": {
+        "type": "object",
+        "required": [
+          "password",
+          "first_name",
+          "last_name"
+        ],
+        "properties": {
+          "password": {
+            "type": "string",
+            "format": "password",
+            "maxLength": 20,
+            "example": "new-secret123"
+          },
+          "first_name": {
+            "type": "string",
+            "maxLength": 150,
+            "example": "Bob"
+          },
+          "last_name": {
+            "type": "string",
+            "maxLength": 150,
+            "example": "Five"
+          },
+          "address": {
+            "type": "string",
+            "nullable": true,
+            "example": "Chiang Mai"
+          },
+          "birthdate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "example": "1995-01-15"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 255,
+            "nullable": true,
+            "example": "bob.five@example.com"
+          }
+        }
+      },
+      "UserProfileLoginRequest": {
+        "type": "object",
+        "required": [
+          "user_id",
+          "password"
+        ],
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "example": "bob01"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "example": "secret123"
+          }
+        }
+      },
+      "UserProfile": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "example": "bob01"
+          },
+          "first_name": {
+            "type": "string",
+            "example": "Bob"
+          },
+          "last_name": {
+            "type": "string",
+            "example": "Five"
+          },
+          "address": {
+            "type": "string",
+            "nullable": true,
+            "example": "Bangkok"
+          },
+          "birthdate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "example": "1995-01-15"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "nullable": true,
+            "example": "bob@example.com"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "APIResponse": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "error_code": {
+            "type": "string",
+            "example": "200"
+          },
+          "error_message": {
+            "type": "string",
+            "example": "Success"
+          },
+          "error_detail": {
+            "nullable": true
+          },
+          "data": {
+            "nullable": true
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "error_code": {
+            "type": "string",
+            "example": "400"
+          },
+          "error_message": {
+            "type": "string",
+            "example": "Field validation Error"
+          },
+          "error_detail": {
+            "nullable": true
+          }
+        }
+      }
+    }
+  }
+}
