@@ -42,7 +42,7 @@ func ApplyConfig(appName string, loglevel string) error {
 			Thereafter: 100,
 		},
 		InitialFields: map[string]interface{}{
-			"aplication": appName,
+			"application": appName,
 		},
 		Encoding:         "json",
 		EncoderConfig:    NewDevelopmentEncoderConfig(),

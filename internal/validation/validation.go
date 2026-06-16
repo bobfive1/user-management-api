@@ -42,7 +42,7 @@ func Init() {
 	Validate.RegisterTagNameFunc(registerTagJson)
 
 	Validate.RegisterValidation("checkyear", ValidateBirthdate)
-	Validate.RegisterValidation("email", VailidEmail)
+	Validate.RegisterValidation("email", ValidEmail)
 
 	RegisterTranslation("checkyear", "{0} Must be at least 18 years old")
 	RegisterTranslation("email", "{0} Email invalid format")
@@ -57,7 +57,22 @@ func registerTagJson(fld reflect.StructField) string {
 }
 
 func ValidateBirthdate(fl validator.FieldLevel) bool {
-	value := fl.Field().Interface().(chrono.DateOnly)
+	field := fl.Field()
+	if field.Kind() == reflect.Pointer {
+		if field.IsNil() {
+			return true
+		}
+		field = field.Elem()
+	}
+
+	value, ok := field.Interface().(chrono.DateOnly)
+	if !ok {
+		return false
+	}
+
+	if value.IsZero() {
+		return false
+	}
 
 	current := time.Now()
 	birthdate18 := value.AddDate(18, 0, 0)
@@ -80,12 +95,12 @@ func ShouldBindJSONWithValidate[T any](c *gin.Context, body T) (T, error) {
 			}
 			return body, errInt.NewFieldValidationError(out)
 		}
-		return body, errInt.NewFieldValidationError(err)
+		return body, errInt.NewFieldValidationError(err.Error())
 	}
 	return body, nil
 }
 
-func VailidEmail(fl validator.FieldLevel) bool {
+func ValidEmail(fl validator.FieldLevel) bool {
 	email := fl.Field().String()
 
 	if len(email) < 3 || len(email) > 254 {

@@ -34,7 +34,7 @@ migrations/               SQL migration สำหรับ schema
 apiServer:
   address: 0.0.0.0:8080
 
-posgresql:
+postgresql:
   host: localhost
   port: 5432
   username: sa
@@ -47,11 +47,11 @@ posgresql:
 
 ```powershell
 $env:APISERVER_ADDRESS="0.0.0.0:8081"
-$env:POSGRESQL_HOST="localhost"
-$env:POSGRESQL_PORT="5432"
+$env:POSTGRESQL_HOST="localhost"
+$env:POSTGRESQL_PORT="5432"
 ```
 
-> หมายเหตุ: key ใน config ปัจจุบันสะกดเป็น `posgresql` ตามโค้ด จึงควรใช้ชื่อนี้ให้ตรงกัน
+> หมายเหตุ: key ใน config ปัจจุบันสะกดเป็น `postgresql` ตามโค้ด จึงควรใช้ชื่อนี้ให้ตรงกัน
 
 ## Database
 

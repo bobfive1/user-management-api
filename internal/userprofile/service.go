@@ -25,7 +25,7 @@ func NewUserProfileService(repo UserProfileRepository) UserProfileService {
 	}
 }
 
-func (s *UserProfileService) Create(ctx context.Context, request InsertUserProfileRequest) (UserProfile, error) {
+func (s *UserProfileService) Create(ctx context.Context, request InsertUserProfileRequest) (UserProfileDisplay, error) {
 	userProfile := UserProfile{
 		UserID:    request.UserID,
 		Password:  HashPassword(request.Password),
@@ -36,14 +36,14 @@ func (s *UserProfileService) Create(ctx context.Context, request InsertUserProfi
 		Email:     request.Email,
 	}
 
-	userProfile, err := s.repo.Create(ctx, userProfile)
+	createdUserProfile, err := s.repo.Create(ctx, userProfile)
 	if err != nil {
-		return UserProfile{}, err
+		return UserProfileDisplay{}, err
 	}
-	return userProfile, nil
+	return createdUserProfile, nil
 }
 
-func (s *UserProfileService) List(ctx context.Context) ([]UserProfile, error) {
+func (s *UserProfileService) List(ctx context.Context) ([]UserProfileDisplay, error) {
 	listUserProfile, err := s.repo.List(ctx)
 	if err != nil {
 		return nil, err
@@ -51,15 +51,15 @@ func (s *UserProfileService) List(ctx context.Context) ([]UserProfile, error) {
 	return listUserProfile, nil
 }
 
-func (s *UserProfileService) GetByID(ctx context.Context, userID string) (UserProfile, error) {
+func (s *UserProfileService) GetByID(ctx context.Context, userID string) (UserProfileDisplay, error) {
 	userProfile, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
-		return UserProfile{}, err
+		return UserProfileDisplay{}, err
 	}
 	return userProfile, nil
 }
 
-func (s *UserProfileService) Update(ctx context.Context, userID string, request UpdateUserProfileRequest) (UserProfile, error) {
+func (s *UserProfileService) Update(ctx context.Context, userID string, request UpdateUserProfileRequest) (UserProfileDisplay, error) {
 	userProfile := UserProfile{
 		Password:  HashPassword(request.Password),
 		FirstName: request.FirstName,
@@ -69,11 +69,11 @@ func (s *UserProfileService) Update(ctx context.Context, userID string, request 
 		Email:     request.Email,
 	}
 
-	userProfile, err := s.repo.Update(ctx, userID, userProfile)
+	updatedUserProfile, err := s.repo.Update(ctx, userID, userProfile)
 	if err != nil {
-		return UserProfile{}, err
+		return UserProfileDisplay{}, err
 	}
-	return userProfile, nil
+	return updatedUserProfile, nil
 }
 
 func (s *UserProfileService) Delete(ctx context.Context, userID string) error {
@@ -84,14 +84,14 @@ func (s *UserProfileService) Delete(ctx context.Context, userID string) error {
 	return nil
 }
 
-func (s *UserProfileService) Login(ctx context.Context, request UserProfileLoginRequest) (UserProfile, error) {
-	user, err := s.repo.GetByID(ctx, request.UserID)
+func (s *UserProfileService) Login(ctx context.Context, request UserProfileLoginRequest) (UserProfileDisplay, error) {
+	user, err := s.repo.GetByIDWithPassword(ctx, request.UserID)
 	if err != nil {
-		return UserProfile{}, err
+		return UserProfileDisplay{}, err
 	}
 	//check password
 	if !CheckPasswordHash(request.Password, user.Password) {
-		return UserProfile{}, ErrorPassNotMatch
+		return UserProfileDisplay{}, ErrorPassNotMatch
 	}
-	return user, nil
+	return NewUserProfileDisplay(user), nil
 }

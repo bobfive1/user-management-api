@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/bobfive1/user-management-api/internal/config"
@@ -28,7 +29,8 @@ var (
 )
 
 type serverAPI struct {
-	server *http.Server
+	server          *http.Server
+	shutdownTimeout time.Duration
 }
 
 type App interface {
@@ -102,7 +104,12 @@ func ApiServer(config *config.AppConfig, service userprofile.UserProfileService)
 		IdleTimeout:       config.ServerAPI.IdleTimeout,
 	}
 
-	return &serverAPI{server: server}
+	shutdownTimeout := config.ServerAPI.ShutdownTimeout
+	if shutdownTimeout <= 0 {
+		shutdownTimeout = 15 * time.Second
+	}
+
+	return &serverAPI{server: server, shutdownTimeout: shutdownTimeout}
 }
 
 func (s *serverAPI) Start() {
@@ -115,7 +122,10 @@ func (s *serverAPI) Start() {
 }
 
 func (s *serverAPI) Stop() {
-	if err := s.server.Close(); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), s.shutdownTimeout)
+	defer cancel()
+
+	if err := s.server.Shutdown(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		Logger.Fatalf("Shutdown api server error cause by: %s", err)
 	}
 	Logger.Info("Shutdown api server")
@@ -127,7 +137,7 @@ func (s *serverAPI) Serv() *http.Server {
 
 func addHookShutdown(wg *sync.WaitGroup, f func()) {
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
 	wg.Add(1)
 	go func() {

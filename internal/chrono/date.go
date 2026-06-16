@@ -48,13 +48,13 @@ func (d *DateOnly) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if value == nil || *value == "" {
-		d.Time = time.Time{}
+		d = nil
 		return nil
 	}
 
 	parsed, err := time.Parse(dateLayout, *value)
 	if err != nil {
-		return fmt.Errorf("birthdate must use YYYY-MM-DD format")
+		return fmt.Errorf("must use YYYY-MM-DD format")
 	}
 
 	d.Time = parsed

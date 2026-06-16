@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	LoginFailMessage    = "Invaid login or password"
+	LoginFailMessage    = "Invalid login or password"
 	UserProfileNotExist = "The requested user profile does not exist."
 )
 
@@ -144,5 +144,5 @@ func (h *UserProfileHandler) login(c *gin.Context) {
 	}
 
 	response := NewUserProfileResponse("200", "Success", profile)
-	c.JSON(http.StatusCreated, response)
+	c.JSON(http.StatusOK, response)
 }

@@ -3,7 +3,10 @@ package db
 import (
 	"context"
 	"fmt"
+	"net"
+	"net/url"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/bobfive1/user-management-api/internal/config"
@@ -13,26 +16,46 @@ import (
 )
 
 func SetupClientPostgres(configApp config.AppConfig) (*pgxpool.Pool, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	connectTimeout := configApp.PostgresConfig.ConnectTimeout
+	if connectTimeout <= 0 {
+		connectTimeout = 10 * time.Second
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), connectTimeout)
 	defer cancel()
 
-	connStr := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s", configApp.PostgresConfig.Username, configApp.PostgresConfig.Password, configApp.PostgresConfig.Host, configApp.PostgresConfig.Port, configApp.PostgresConfig.Database, configApp.PostgresConfig.SSLMode)
+	connURL := url.URL{
+		Scheme: "postgres",
+		User:   url.UserPassword(configApp.PostgresConfig.Username, configApp.PostgresConfig.Password),
+		Host:   net.JoinHostPort(configApp.PostgresConfig.Host, strconv.Itoa(configApp.PostgresConfig.Port)),
+		Path:   configApp.PostgresConfig.Database,
+	}
+	query := connURL.Query()
+	if configApp.PostgresConfig.SSLMode != "" {
+		query.Set("sslmode", configApp.PostgresConfig.SSLMode)
+	}
+	connURL.RawQuery = query.Encode()
 
-	config, err := pgxpool.ParseConfig(connStr)
+	poolConfig, err := pgxpool.ParseConfig(connURL.String())
 	if err != nil {
 		return nil, err
 	}
 
-	config.MaxConns = 10
-	config.MinConns = 1
+	poolConfig.ConnConfig.ConnectTimeout = connectTimeout
+	if configApp.PostgresConfig.MaxConns > 0 {
+		poolConfig.MaxConns = int32(configApp.PostgresConfig.MaxConns)
+	}
+	if configApp.PostgresConfig.MinConns > 0 {
+		poolConfig.MinConns = int32(configApp.PostgresConfig.MinConns)
+	}
 
 	hostname, _ := os.Hostname()
 	if hostname == "" {
 		hostname = "Unknow-host"
 	}
-	config.ConnConfig.RuntimeParams["application_name"] = fmt.Sprintf("%s-%s", configApp.App.Name, hostname)
+	poolConfig.ConnConfig.RuntimeParams["application_name"] = fmt.Sprintf("%s-%s", configApp.App.Name, hostname)
 
-	pool, err := pgxpool.NewWithConfig(ctx, config)
+	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
 	if err != nil {
 		return nil, err
 	}

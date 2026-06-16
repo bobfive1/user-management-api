@@ -23,35 +23,43 @@ import (
 type userProfileRepoStub struct {
 	t *testing.T
 
-	create  func(context.Context, userprofile.UserProfile) (userprofile.UserProfile, error)
-	list    func(context.Context) ([]userprofile.UserProfile, error)
-	getByID func(context.Context, string) (userprofile.UserProfile, error)
-	update  func(context.Context, string, userprofile.UserProfile) (userprofile.UserProfile, error)
-	delete  func(context.Context, string) error
+	create              func(context.Context, userprofile.UserProfile) (userprofile.UserProfileDisplay, error)
+	list                func(context.Context) ([]userprofile.UserProfileDisplay, error)
+	getByID             func(context.Context, string) (userprofile.UserProfileDisplay, error)
+	getByIDWithPassword func(context.Context, string) (userprofile.UserProfile, error)
+	update              func(context.Context, string, userprofile.UserProfile) (userprofile.UserProfileDisplay, error)
+	delete              func(context.Context, string) error
 }
 
-func (s *userProfileRepoStub) Create(ctx context.Context, request userprofile.UserProfile) (userprofile.UserProfile, error) {
+func (s *userProfileRepoStub) Create(ctx context.Context, request userprofile.UserProfile) (userprofile.UserProfileDisplay, error) {
 	if s.create == nil {
 		s.t.Fatal("unexpected Create call")
 	}
 	return s.create(ctx, request)
 }
 
-func (s *userProfileRepoStub) List(ctx context.Context) ([]userprofile.UserProfile, error) {
+func (s *userProfileRepoStub) List(ctx context.Context) ([]userprofile.UserProfileDisplay, error) {
 	if s.list == nil {
 		s.t.Fatal("unexpected List call")
 	}
 	return s.list(ctx)
 }
 
-func (s *userProfileRepoStub) GetByID(ctx context.Context, userID string) (userprofile.UserProfile, error) {
+func (s *userProfileRepoStub) GetByID(ctx context.Context, userID string) (userprofile.UserProfileDisplay, error) {
 	if s.getByID == nil {
 		s.t.Fatal("unexpected GetByID call")
 	}
 	return s.getByID(ctx, userID)
 }
 
-func (s *userProfileRepoStub) Update(ctx context.Context, userID string, request userprofile.UserProfile) (userprofile.UserProfile, error) {
+func (s *userProfileRepoStub) GetByIDWithPassword(ctx context.Context, userID string) (userprofile.UserProfile, error) {
+	if s.getByIDWithPassword == nil {
+		s.t.Fatal("unexpected GetByIDWithPassword call")
+	}
+	return s.getByIDWithPassword(ctx, userID)
+}
+
+func (s *userProfileRepoStub) Update(ctx context.Context, userID string, request userprofile.UserProfile) (userprofile.UserProfileDisplay, error) {
 	if s.update == nil {
 		s.t.Fatal("unexpected Update call")
 	}
@@ -129,12 +137,12 @@ func TestUserProfileHandler_Create(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		repo := &userProfileRepoStub{
 			t: t,
-			create: func(_ context.Context, request userprofile.UserProfile) (userprofile.UserProfile, error) {
+			create: func(_ context.Context, request userprofile.UserProfile) (userprofile.UserProfileDisplay, error) {
 				assert.Equal(t, "bobbydev04", request.UserID)
 				assert.Equal(t, "tawat", request.FirstName)
 				assert.NotEqual(t, "psdsystem", request.Password)
 				assert.True(t, userprofile.CheckPasswordHash("psdsystem", request.Password))
-				return userprofile.UserProfile{
+				return userprofile.UserProfileDisplay{
 					UserID:    request.UserID,
 					FirstName: request.FirstName,
 					LastName:  request.LastName,
@@ -171,8 +179,8 @@ func TestUserProfileHandler_Create(t *testing.T) {
 	t.Run("repository error", func(t *testing.T) {
 		repo := &userProfileRepoStub{
 			t: t,
-			create: func(context.Context, userprofile.UserProfile) (userprofile.UserProfile, error) {
-				return userprofile.UserProfile{}, errors.New("insert failed")
+			create: func(context.Context, userprofile.UserProfile) (userprofile.UserProfileDisplay, error) {
+				return userprofile.UserProfileDisplay{}, errors.New("insert failed")
 			},
 		}
 
@@ -188,10 +196,10 @@ func TestUserProfileHandler_List(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		repo := &userProfileRepoStub{
 			t: t,
-			list: func(context.Context) ([]userprofile.UserProfile, error) {
-				return []userprofile.UserProfile{
-					{UserID: "bob01", FirstName: "Bob", LastName: "One", Password: "secret"},
-					{UserID: "bob02", FirstName: "Bob", LastName: "Two", Password: "secret"},
+			list: func(context.Context) ([]userprofile.UserProfileDisplay, error) {
+				return []userprofile.UserProfileDisplay{
+					{UserID: "bob01", FirstName: "Bob", LastName: "One"},
+					{UserID: "bob02", FirstName: "Bob", LastName: "Two"},
 				}, nil
 			},
 		}
@@ -209,7 +217,7 @@ func TestUserProfileHandler_List(t *testing.T) {
 	t.Run("repository error", func(t *testing.T) {
 		repo := &userProfileRepoStub{
 			t: t,
-			list: func(context.Context) ([]userprofile.UserProfile, error) {
+			list: func(context.Context) ([]userprofile.UserProfileDisplay, error) {
 				return nil, errors.New("select failed")
 			},
 		}
@@ -226,9 +234,9 @@ func TestUserProfileHandler_GetByID(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		repo := &userProfileRepoStub{
 			t: t,
-			getByID: func(_ context.Context, userID string) (userprofile.UserProfile, error) {
+			getByID: func(_ context.Context, userID string) (userprofile.UserProfileDisplay, error) {
 				assert.Equal(t, "bob01", userID)
-				return userprofile.UserProfile{UserID: userID, FirstName: "Bob", LastName: "One"}, nil
+				return userprofile.UserProfileDisplay{UserID: userID, FirstName: "Bob", LastName: "One"}, nil
 			},
 		}
 
@@ -243,8 +251,8 @@ func TestUserProfileHandler_GetByID(t *testing.T) {
 	t.Run("not found", func(t *testing.T) {
 		repo := &userProfileRepoStub{
 			t: t,
-			getByID: func(context.Context, string) (userprofile.UserProfile, error) {
-				return userprofile.UserProfile{}, pgx.ErrNoRows
+			getByID: func(context.Context, string) (userprofile.UserProfileDisplay, error) {
+				return userprofile.UserProfileDisplay{}, pgx.ErrNoRows
 			},
 		}
 
@@ -259,8 +267,8 @@ func TestUserProfileHandler_GetByID(t *testing.T) {
 	t.Run("repository error", func(t *testing.T) {
 		repo := &userProfileRepoStub{
 			t: t,
-			getByID: func(context.Context, string) (userprofile.UserProfile, error) {
-				return userprofile.UserProfile{}, errors.New("select failed")
+			getByID: func(context.Context, string) (userprofile.UserProfileDisplay, error) {
+				return userprofile.UserProfileDisplay{}, errors.New("select failed")
 			},
 		}
 
@@ -276,11 +284,11 @@ func TestUserProfileHandler_Update(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		repo := &userProfileRepoStub{
 			t: t,
-			update: func(_ context.Context, userID string, request userprofile.UserProfile) (userprofile.UserProfile, error) {
+			update: func(_ context.Context, userID string, request userprofile.UserProfile) (userprofile.UserProfileDisplay, error) {
 				assert.Equal(t, "bob01", userID)
 				assert.Equal(t, "updated", request.FirstName)
 				assert.True(t, userprofile.CheckPasswordHash("newpassword", request.Password))
-				return userprofile.UserProfile{
+				return userprofile.UserProfileDisplay{
 					UserID:    userID,
 					FirstName: request.FirstName,
 					LastName:  request.LastName,
@@ -314,8 +322,8 @@ func TestUserProfileHandler_Update(t *testing.T) {
 	t.Run("not found", func(t *testing.T) {
 		repo := &userProfileRepoStub{
 			t: t,
-			update: func(context.Context, string, userprofile.UserProfile) (userprofile.UserProfile, error) {
-				return userprofile.UserProfile{}, pgx.ErrNoRows
+			update: func(context.Context, string, userprofile.UserProfile) (userprofile.UserProfileDisplay, error) {
+				return userprofile.UserProfileDisplay{}, pgx.ErrNoRows
 			},
 		}
 
@@ -379,7 +387,7 @@ func TestUserProfileHandler_Login(t *testing.T) {
 		hashedPassword := userprofile.HashPassword("psdsystem")
 		repo := &userProfileRepoStub{
 			t: t,
-			getByID: func(_ context.Context, userID string) (userprofile.UserProfile, error) {
+			getByIDWithPassword: func(_ context.Context, userID string) (userprofile.UserProfile, error) {
 				assert.Equal(t, "bob01", userID)
 				return userprofile.UserProfile{
 					UserID:    userID,
@@ -393,7 +401,7 @@ func TestUserProfileHandler_Login(t *testing.T) {
 
 		w := performRequest(t, newUserProfileTestRouter(t, repo), http.MethodPost, "/api/v1/userprofiles/login", body)
 
-		assert.Equal(t, http.StatusCreated, w.Code)
+		assert.Equal(t, http.StatusOK, w.Code)
 		response := decodeBody(t, w)
 		assert.Equal(t, "200", response["error_code"])
 		data := response["data"].(map[string]any)
@@ -405,7 +413,7 @@ func TestUserProfileHandler_Login(t *testing.T) {
 		hashedPassword := userprofile.HashPassword("psdsystem")
 		repo := &userProfileRepoStub{
 			t: t,
-			getByID: func(context.Context, string) (userprofile.UserProfile, error) {
+			getByIDWithPassword: func(context.Context, string) (userprofile.UserProfile, error) {
 				return userprofile.UserProfile{UserID: "bob01", Password: hashedPassword}, nil
 			},
 		}
@@ -422,7 +430,7 @@ func TestUserProfileHandler_Login(t *testing.T) {
 	t.Run("user not found", func(t *testing.T) {
 		repo := &userProfileRepoStub{
 			t: t,
-			getByID: func(context.Context, string) (userprofile.UserProfile, error) {
+			getByIDWithPassword: func(context.Context, string) (userprofile.UserProfile, error) {
 				return userprofile.UserProfile{}, pgx.ErrNoRows
 			},
 		}
@@ -449,7 +457,7 @@ func TestUserProfileHandler_Login(t *testing.T) {
 	t.Run("repository error", func(t *testing.T) {
 		repo := &userProfileRepoStub{
 			t: t,
-			getByID: func(context.Context, string) (userprofile.UserProfile, error) {
+			getByIDWithPassword: func(context.Context, string) (userprofile.UserProfile, error) {
 				return userprofile.UserProfile{}, errors.New("select failed")
 			},
 		}

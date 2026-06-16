@@ -19,7 +19,7 @@ type AppConfig struct {
 	App            AppInfo          `mapstructure:"app"`
 	ServerAPI      ServerAPIConfig  `mapstructure:"apiServer"`
 	Logging        LoggingConfig    `mapstructure:"logging"`
-	PostgresConfig PostgreSQLConfig `mapstructure:"posgresql"`
+	PostgresConfig PostgreSQLConfig `mapstructure:"postgresql"`
 }
 
 type AppInfo struct {
@@ -56,6 +56,7 @@ func LoadConfig() (*AppConfig, error) {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
 	viper.AutomaticEnv()
 	viper.AllowEmptyEnv(true)
+	viper.RegisterAlias("posgresql", "postgresql")
 
 	// read config
 	if err := viper.ReadConfig(bytes.NewBuffer(conf)); err != nil {

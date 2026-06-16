@@ -29,6 +29,19 @@ type UserProfileDisplay struct {
 	UpdatedAt time.Time        `db:"updated_at" json:"updated_at"`
 }
 
+func NewUserProfileDisplay(user UserProfile) UserProfileDisplay {
+	return UserProfileDisplay{
+		UserID:    user.UserID,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Address:   user.Address,
+		Birthdate: user.Birthdate,
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}
+}
+
 type InsertUserProfileRequest struct {
 	UserID    string           `db:"user_id" json:"user_id" binding:"required,max=20"`
 	Password  string           `db:"password" json:"password" binding:"required,max=20"`
