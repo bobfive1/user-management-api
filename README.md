@@ -2,6 +2,11 @@
 
 REST API สำหรับจัดการข้อมูลผู้ใช้งาน สร้างด้วย Go + Gin และเชื่อมต่อ PostgreSQL ผ่าน `pgxpool` โดยมีฟีเจอร์หลักสำหรับสร้าง อ่าน แก้ไข ลบ และ login ด้วย `user_id` / `password`
 
+## Test Link
+
+- API: https://user-management-api-v6er.onrender.com
+- Health check: https://user-management-api-v6er.onrender.com/health
+
 ## Tech Stack
 
 - Go `1.25.0`
